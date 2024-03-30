@@ -39,7 +39,7 @@ import java.util.concurrent.Future;
 
 public class Main {
 
-    public static final String VERSION = "2023.0209.08";
+    public static final String VERSION = "2024.0330.15";
     public static final String LOGO = "\n      ███╗   ███╗ ██╗   ██╗    ██╗ ██████╗   ██████╗\n      ████╗ ████║ ╚██╗ ██╔╝    ██║ ╚════██╗ ██╔════╝\n      ██╔████╔██║  ╚████╔╝     ██║  █████╔╝ ██║     \n      ██║╚██╔╝██║   ╚██╔╝ ██   ██║ ██╔═══╝  ██║     \n      ██║ ╚═╝ ██║    ██║  ╚█████╔╝ ███████╗ ╚██████╗\n      ╚═╝     ╚═╝    ╚═╝   ╚════╝  ╚══════╝  ╚═════╝\n\n";
 
     public static final Locale locale = Locale.getDefault();
@@ -200,135 +200,8 @@ public class Main {
             } catch (Exception e) {
                 e.printStackTrace();
             }
-            final String path = System.getProperty("user.dir") + File.separator + "myj2c.licence";
-            if (new File(path).exists()) {
-                if (locale.getLanguage().contains("zh")) {
-                    System.out.println("正在读取授权文件...\n");
-                } else {
-                    System.out.println("Reading authorization file...\n");
-                }
-                String value = LicenseManager.getValue("offline");
-                if (!StringUtils.equals(value, "true")) {
-                    try {
-                        URL url = new URL("https://gitee.com/myj2c/myj2c/raw/master/code");
-                        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-                        if (HttpURLConnection.HTTP_OK != conn.getResponseCode()) {
-                            if (locale.getLanguage().contains("zh")) {
-                                System.out.println("获取禁用机器码失败,可能是网站异常,请稍后再试...");
-                            } else {
-                                System.out.println("Failed to connect to the authorization server. It may be a website exception. Please try again later ...");
-                            }
-                            return 1;
-                        }
-                        InputStreamReader inputReader = new InputStreamReader(conn.getInputStream());
-                        BufferedReader bufferedReader = new BufferedReader(inputReader);
-                        String temp;
-                        while ((temp = bufferedReader.readLine()) != null) {
-                            if (!temp.trim().equals("")) {
-                                if (key.equals(temp.trim())) {
-                                    if (locale.getLanguage().contains("zh")) {
-                                        System.out.println("您的机器码被禁用...");
-                                    } else {
-                                        System.out.println("Your license is disabled ...");
-                                    }
-                                    return 1;
-                                }
-                            }
-                        }
-                        bufferedReader.close();
-                        inputReader.close();
-                    } catch (Exception e) {
-                        if (e.getMessage().contains("PKIX path building failed")) {
-                            if (locale.getLanguage().contains("zh")) {
-                                System.out.println("获取禁用机器码失败,可能是您修改了系统时间...");
-                            } else {
-                                System.out.println("Failed to obtain the machine code. You may have modified the system time ...");
-                            }
-                        } else {
-                            if (locale.getLanguage().contains("zh")) {
-                                System.out.println("获取禁用机器码失败,可能是网络问题,请您联网后再运行...");
-                            } else {
-                                System.out.println("Failed to connect to the authorization server. It may be a network problem. Please run it after connecting to the network");
-                            }
-                        }
-                        return 1;
-                    }
-                } else {
-                    if (locale.getLanguage().contains("zh")) {
-                        System.out.println("您的版本为单机版...");
-                    } else {
-                        System.out.println(" Your version is offline version ...");
-                    }
-                }
-            } else {
-                if (locale.getLanguage().contains("zh")) {
-                    System.out.println("\n未检测到授权文件...\n");
-                } else {
-                    System.out.println("\nNo authorization file found...\n");
-                }
-            }
+
             LicenseManager.printInfo(key);
-            if (locale.getLanguage().contains("zh")) {
-                System.out.println("\n正在检查更新...\n");
-            } else {
-                System.out.println("\nChecking for updates...\n");
-            }
-            try {
-                URL url = new URL("https://gitee.com/myj2c/myj2c/raw/master/update");
-                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-                conn.setConnectTimeout(10 * 1000);
-                conn.setReadTimeout(10 * 1000);
-                InputStreamReader inputReader = new InputStreamReader(conn.getInputStream());
-                BufferedReader bufferedReader = new BufferedReader(inputReader);
-                boolean needUpdate = false;
-                String updateDescribe = "";
-                String temp;
-                while ((temp = bufferedReader.readLine()) != null) {
-                    if (temp.trim().contains("version") && !temp.trim().contains(VERSION)) {
-                        String version = temp.trim().replace("version", "");
-                        if (new BigDecimal(version.replaceFirst("\\.", "")).compareTo(new BigDecimal(VERSION.replaceFirst("\\.", ""))) > 0) {
-                            needUpdate = true;
-                        }
-                    } else if (temp.trim().contains("desc")) {
-                        updateDescribe = temp.trim().replace("desc", "");
-                    } else if (temp.trim().contains("update") && needUpdate) {
-                        if (locale.getLanguage().contains("zh")) {
-                            System.out.println("更新信息");
-                            System.out.println("有新版本发布");
-                            System.out.println(updateDescribe);
-                            System.out.println("请前往: https://gitee.com/myj2c/myj2c/releases 更新\n");
-                        } else {
-                            System.out.println("Update information");
-                            System.out.println("New version released");
-                            System.out.println(updateDescribe);
-                            System.out.println("Please go to: https://gitee.com/myj2c/myj2c/releases update\n");
-                        }
-                        return 1;
-                    }
-                }
-                if (needUpdate) {
-                    if (locale.getLanguage().contains("zh")) {
-                        System.out.println("更新信息");
-                        System.out.println("有新版本发布");
-                        System.out.println(updateDescribe);
-                        System.out.println("请前往: https://gitee.com/myj2c/myj2c/releases 更新\n");
-                    } else {
-                        System.out.println("Update information");
-                        System.out.println("New version released");
-                        System.out.println(updateDescribe);
-                        System.out.println("Please go to: https://gitee.com/myj2c/myj2c/releases update\n");
-                    }
-                } else {
-                    if (locale.getLanguage().contains("zh")) {
-                        System.out.println("您当前版本为最新版本");
-                    } else {
-                        System.out.println("Your current version is the latest version");
-                    }
-                }
-                bufferedReader.close();
-                inputReader.close();
-            } catch (Exception e) {
-            }
             if (locale.getLanguage().contains("zh")) {
                 System.out.println("\n正在初始化系统...");
             } else {

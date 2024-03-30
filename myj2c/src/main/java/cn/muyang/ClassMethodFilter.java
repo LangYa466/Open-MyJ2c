@@ -1,7 +1,7 @@
 package cn.muyang;
 
-import cn.muyang.nativeobfuscator.Native;
-import cn.muyang.nativeobfuscator.NotNative;
+import cn.langya.nativeobfuscator.Native;
+import cn.langya.nativeobfuscator.NotNative;
 import cn.muyang.utils.AntPathMatcher;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;

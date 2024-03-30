@@ -34,14 +34,7 @@ public final class LicenseManager {
     private static final String DEFAULT_URL_ENCODING = "UTF-8";
 
     public static String getValue(String key) {
-        if (cache.get(key) == null) {
-            String v = r3().get(key);
-            v = v == null ? "" : v;
-            cache.put(key, v);
-            return v;
-        } else {
-            return cache.get(key);
-        }
+       return key;
     }
 
     public static void printInfo(String code) {
@@ -227,12 +220,12 @@ public final class LicenseManager {
     private static Map<String, String> doValidProduct(Map<String, String> info) {
         Map<String, String> map = new HashMap<>();
         String type = "9";
-        String version = "试用版";
+        String version = "作者版";
 
         if (StringUtils.isNotEmpty(info.get("type"))) {
             type = info.get("type");
         }
-        map.put("title", "试用版");
+        map.put("title", "作者版");
         map.put("type", type);
         boolean sameMachine = false;
         String key = null;
@@ -270,14 +263,10 @@ public final class LicenseManager {
         if (!sign.equals(info.get("sign"))) {
             throw new RuntimeException("您当前的版本为" + version);
         }
-        if (StringUtils.equals("1", type)) {
-            version = "个人版";
-        } else {
-            if (StringUtils.equals("2", type)) {
-                version = "专业版";
-            }
-        }
-        String expireDate = info.get("expireDate");
+
+        version = "专业版";
+
+        String expireDate = "-1";
         String authInfo = info.get("name") == null ? " " : "授权用户:" + info.get("name") + " ";
         if (StringUtils.equals("-1", expireDate)) {
             map.put("title", version);

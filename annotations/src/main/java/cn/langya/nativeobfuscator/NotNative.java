@@ -1,4 +1,4 @@
-package cn.muyang.nativeobfuscator;
+package cn.langya.nativeobfuscator;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

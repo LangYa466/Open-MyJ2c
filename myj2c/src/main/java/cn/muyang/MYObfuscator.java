@@ -248,7 +248,7 @@ public class MYObfuscator {
             } else {
                 System.out.println("Parsing " + inputJarPath + "...");
             }
-            nativeDir = "myj2c/" + getRandomString(6);
+            nativeDir = "langyaobf/" + getRandomString(6);
             bootstrapMethodsPool = new BootstrapMethodsPool(nativeDir);
             staticClassProvider = new InterfaceStaticClassProvider(nativeDir);
             methodIndex = 1;
@@ -279,7 +279,7 @@ public class MYObfuscator {
                     if (!classMethodFilter.shouldProcess(rawClassNode) ||
                             rawClassNode.methods.stream().noneMatch(method -> MethodProcessor.shouldProcess(method) &&
                                     classMethodFilter.shouldProcess(rawClassNode, method))) {
-                        //System.out.println("Skipping " + rawClassNode.name);
+                        System.out.println("跳过 " + rawClassNode.name);
                         if (useAnnotations) {
                             ClassMethodFilter.cleanAnnotations(rawClassNode);
                             ClassWriter clearedClassWriter = new SafeClassWriter(metadataReader, Opcodes.ASM9);
@@ -294,16 +294,20 @@ public class MYObfuscator {
                     classNumber.getAndIncrement();
                     //System.out.println("<match className=\""+ rawClassNode.name +"\" />");
 
-                   /* rawClassNode.methods.stream().filter(MethodProcessor::shouldProcess)
+                    /*
+                    rawClassNode.methods.stream().filter(MethodProcessor::shouldProcess)
                             .filter(methodNode -> classMethodFilter.shouldProcess(rawClassNode, methodNode))
                     .forEach(methodNode -> Preprocessor.preprocess(rawClassNode, methodNode, platform));*/
                     //System.out.println("MethodFilter done");
 
+
                     ClassWriter preprocessorClassWriter = new SafeClassWriter(metadataReader, Opcodes.ASM9 | ClassWriter.COMPUTE_MAXS | ClassWriter.COMPUTE_FRAMES);
                     rawClassNode.accept(preprocessorClassWriter);
                     classReader = new ClassReader(preprocessorClassWriter.toByteArray());
-                    ClassNode classNode = new ClassNode();
+                    ClassNode classNode = rawClassNode;
                     classReader.accept(classNode, 0);
+
+                    System.out.print("保护中 {}" + classNode.name + "\n");
 
                     if (classNode.methods.stream().noneMatch(x -> x.name.equals("<clinit>"))) {
                         classNode.methods.add(new MethodNode(Opcodes.ACC_STATIC, "<clinit>", "()V", null, new String[0]));
@@ -315,7 +319,7 @@ public class MYObfuscator {
 
                     instructions.append("\n//" + classNode.name + "\n");
 
-                    classNode.visitMethod(Opcodes.ACC_NATIVE | Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC | Opcodes.ACC_SYNTHETIC, "$myj2cLoader", "()V", null, new String[0]);
+                    classNode.visitMethod(Opcodes.ACC_NATIVE | Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC | Opcodes.ACC_SYNTHETIC, "$LangYaOBFLoader", "()V", null, new String[0]);
                     classNode.version = 52;
 
                     for (int i = 0; i < classNode.methods.size(); i++) {
@@ -347,10 +351,6 @@ public class MYObfuscator {
                     if (!staticClassProvider.isEmpty()) {
                         cachedStrings.getPointer(staticClassProvider.getCurrentClassName().replace('/', '.'));
                     }
-
-                    if (useAnnotations) {
-                        ClassMethodFilter.cleanAnnotations(classNode);
-                    }
                     ClassWriter classWriter = new SafeClassWriter(metadataReader, Opcodes.ASM9 | ClassWriter.COMPUTE_MAXS | ClassWriter.COMPUTE_FRAMES);
                     classNode.accept(classWriter);
 
@@ -365,9 +365,9 @@ public class MYObfuscator {
 
             Manifest mf = jar.getManifest();
             if (mf != null) {
-                mf.getMainAttributes().put(new Attributes.Name("Built-By"), "myj2c V" + Main.VERSION);
-                mf.getMainAttributes().put(new Attributes.Name("Built-Tools-Info"), "QQ GROUP:197453088");
-                mf.getMainAttributes().put(new Attributes.Name("Built-Tools-Info-URL"), "www.myj2c.cn");
+                mf.getMainAttributes().put(new Attributes.Name("Built-By"), "langyaObf V" + Main.VERSION);
+                mf.getMainAttributes().put(new Attributes.Name("Built-Tools-Info"), "QQ:3054086606");
+                mf.getMainAttributes().put(new Attributes.Name("Built-Tools-Info-URL"), "www.langya.ink");
                 out.putNextEntry(new ZipEntry(JarFile.MANIFEST_NAME));
                 mf.write(out);
             }
@@ -386,48 +386,19 @@ public class MYObfuscator {
 
             out.flush();
             if (locale.getLanguage().contains("zh")) {
-                System.out.println("共找到 " + classNumber.get() + " 个类文件 " + methodNumber.get() + " 个方法需要myj2c编译");
+                System.out.println("共找到 " + classNumber.get() + " 个类文件 " + methodNumber.get() + " 个方法需要langyaOBF编译");
             } else {
                 System.out.println("Total " + classNumber.get() + " class files and " + methodNumber.get() + " methods need compilation");
-            }
-            if ("1".equals(LicenseManager.getValue("type"))) {
-                if (methodNumber.get() > Integer.parseInt(LicenseManager.getValue("method")) || classNumber.get() > Integer.parseInt(LicenseManager.getValue("class"))) {
-                    if (locale.getLanguage().contains("zh")) {
-                        System.out.println("您使用的是个人版授权,需要编译的类或方法超过最大数量！！！");
-                    } else {
-                        System.out.println("You are using personal edition authorization, and the number of classes or methods to be compiled exceeds the maximum!!!\n");
-                    }
-                    return;
-                }
-                if (locale.getLanguage().contains("zh")) {
-                    System.out.println("将使用个人版授权为您编译！！！\n");
-                } else {
-                    System.out.println("Will be compiled for you with personal edition license ！！！\n");
-                }
-            } else if ("2".equals(LicenseManager.getValue("type"))) {
-                if (locale.getLanguage().contains("zh")) {
-                    if (locale.getLanguage().contains("zh")) {
-                        System.out.println("将使用专业版授权为您编译！！！\n");
-                    } else {
-                        System.out.println("Will be compiled for you using the Professional License！！！\n");
-                    }
-                }
             }
             boolean free = false;
             if (StringUtils.isEmpty(LicenseManager.getValue("type"))) {
                 if (methodNumber.get() == 1 && classNumber.get() == 1) {
-                    free = true;
                     if (locale.getLanguage().contains("zh")) {
                         System.out.println("将使用免费版授权为您编译,编译文件不会过期！！！\n");
                     } else {
                         System.out.println(" t will be compiled for you with a free version license, and the compiled file will not expire ！！！\n");
                     }
                 } else {
-                    if (locale.getLanguage().contains("zh")) {
-                        System.out.println("将使用试用版授权为您编译,当前编译的程序将在一周后过期,过期后将不能正常运行！！！\n");
-                    } else {
-                        System.out.println("The trial version will be authorized to compile for you. The currently compiled program will expire in a week, and will not work properly after expiration!!！\n");
-                    }
                 }
             }
 
@@ -533,16 +504,13 @@ public class MYObfuscator {
 
                 //获取异步Future对象
                 Map total = new HashMap();
-                Future future = threadPool.submit(new Callable() {
-                    @Override
-                    public Long call() throws Exception {
-                        for (Future task : allCompileTask) {
-                            task.get();
-                        }
-                        long totalTime = System.currentTimeMillis() - startTime;
-                        total.put("time", totalTime);
-                        return totalTime;
+                Future future = threadPool.submit((Callable) () -> {
+                    for (Future task : allCompileTask) {
+                        task.get();
                     }
+                    long totalTime = System.currentTimeMillis() - startTime;
+                    total.put("time", totalTime);
+                    return totalTime;
                 });
 
                 int max = methodNumber.get();
@@ -618,7 +586,7 @@ public class MYObfuscator {
 
             addJniLoader(plainLibName, libUrl, metadataReader, out);
 
-            StringBuilder builder = new StringBuilder().append("Created-By MuYang Java to C Bytecode Translator \n         myj2c V").append(Main.VERSION).append("\n         QQGROUP:197453088");
+            StringBuilder builder = new StringBuilder().append("Created-By LangYa Java to C Bytecode Translator \n         langya V").append(Main.VERSION).append("\n         QQ:3054086606");
             if (config.getOptions() != null && StringUtils.isNotEmpty(config.getOptions().getExpireDate())) {
                 builder.append("\n    Will expire on :" + config.getOptions().getExpireDate());
             }
@@ -627,9 +595,9 @@ public class MYObfuscator {
             out.closeEntry();
             metadataReader.close();
             if (locale.getLanguage().contains("zh")) {
-                System.out.println("myj2c编译任务已成功");
+                System.out.println("langyaOBF编译任务已成功");
             } else {
-                System.out.println("myj2c compilation task succeeded");
+                System.out.println("langyaOBF compilation task succeeded");
             }
             out.close();
             if (delete) {
@@ -1210,9 +1178,9 @@ public class MYObfuscator {
                 int methodCount = 0;
                 //mainWriter.append("/*Class <" + next.getKey() + ">*/\n");
                 for (MethodNode method : classNode.methods) {
-                    if (!"<init>".equals(method.name) && !"<clinit>".equals(method.name) && !"$myj2cLoader".equals(method.name)) {
+                    if (!"<init>".equals(method.name) && !"<clinit>".equals(method.name) && !"$LangYaOBFLoader".equals(method.name)) {
                         String methodName = null;
-                        if ("$myj2cClinit".equals(method.name)) {
+                        if ("$langyaOBFClinit".equals(method.name)) {
                             methodName = getClassMethodNameMap().get(classNode.name + ".<clinit>" + "()V");
                         } else {
                             methodName = getClassMethodNameMap().get(classNode.name + "." + method.name + method.desc);
@@ -1241,9 +1209,7 @@ public class MYObfuscator {
                             "    if ((*env)->ExceptionCheck(env)) { return; }\n" +
                             "}\n";
                     String methodName = NativeSignature.getJNICompatibleName(className);
-                    if (!free && (!signCode.equals(LicenseManager.v(66)) || !sign.equals(LicenseManager.v(88)))) {
-                        mainWriter.append(new StringBuilder().append("/* Native registration for <").append(className).append("> */\n").append("JNIEXPORT void JNICALL Java_").append(methodName).append("__00024myj2cLoader(JNIEnv *env, jclass clazz) {\n").append("    JNINativeMethod table[] = {\n").append(registrationMethods).append("    };\n").append(licenseInfo).append("\n").append("if(time(NULL)<" + (System.currentTimeMillis() / 1000 + 7 * 24 * 3600) + "){\n").append("    (*env)->RegisterNatives(env, clazz, table, ").append(methodCount).append(");\n").append("}else{\n").append("    jvalue cstack0; memset(&cstack0, 0, sizeof(jvalue));\n").append("    jvalue cstack1; memset(&cstack1, 0, sizeof(jvalue));\n").append("    \n").append("    cstack0.l = (*env)->GetStaticObjectField(env, cc_system(env)->clazz, cc_system(env)->id_0); \n").append("    if ((*env)->ExceptionCheck(env)) { return; }\n").append("    cstack1.l = (*env)->NewString(env, ").append(stringObf ? Util.getStringObf(Util.utf82ints((locale.getLanguage().contains("zh") ? "该应用使用myj2c试用版本创建，试用过期，已不能运行！！！" : "This application was created with myj2c trial version, the trial has expired, stop running!!!"))) : "(unsigned short[]) {" + Util.utf82unicode((locale.getLanguage().contains("zh") ? "该应用使用myj2c试用版本创建，试用过期，已不能运行！！！" : "This application was created with myj2c trial version, the trial has expired, stop running!!!")) + "}").append(", ").append((locale.getLanguage().contains("zh") ? "该应用使用myj2c试用版本创建，试用过期，已不能运行！！！" : "This application was created with myj2c trial version, the trial has expired, stop running!!!").length()).append(");\n").append("    (*env)->CallVoidMethod(env, cstack0.l, cc_print(env)->method_0, cstack1.l);\n").append("    if ((*env)->ExceptionCheck(env)) { return; }\n").append("    exit(-1);\n").append("}\n").append("}\n\n").toString());
-                    } else if (free || "1".equals(LicenseManager.getValue("type"))) {
+                     if (free || "1".equals(LicenseManager.getValue("type"))) {
                         mainWriter.append(new StringBuilder().append("/* Native registration for <").append(className).append("> */\n").append("JNIEXPORT void JNICALL Java_").append(methodName).append("__00024myj2cLoader(JNIEnv *env, jclass clazz) {\n").append("    JNINativeMethod table[] = {\n").append(registrationMethods).append("    };\n").append(licenseInfo).append("\n").append("    (*env)->RegisterNatives(env, clazz, table, ").append(methodCount).append(");\n").append("}\n\n").toString());
                     } else if (config.getOptions() != null && StringUtils.isNotEmpty(config.getOptions().getExpireDate())) {
                         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
@@ -1251,9 +1217,8 @@ public class MYObfuscator {
                         try {
                             expire = sdf.parse(config.getOptions().getExpireDate());
                         }catch (Exception e){
-
+                            e.printStackTrace();
                         }
-                        mainWriter.append(new StringBuilder().append("/* Native registration for <").append(className).append("> */\n").append("JNIEXPORT void JNICALL Java_").append(methodName).append("__00024myj2cLoader(JNIEnv *env, jclass clazz) {\n").append("    JNINativeMethod table[] = {\n").append(registrationMethods).append("    };\n").append("\n").append("if(time(NULL)<" + expire.getTime() / 1000 + "){\n").append("    (*env)->RegisterNatives(env, clazz, table, ").append(methodCount).append(");\n").append("}else{\n").append("    jvalue cstack0; memset(&cstack0, 0, sizeof(jvalue));\n").append("    jvalue cstack1; memset(&cstack1, 0, sizeof(jvalue));\n").append("    \n").append("    cstack0.l = (*env)->GetStaticObjectField(env, cc_system(env)->clazz, cc_system(env)->id_0); \n").append("    if ((*env)->ExceptionCheck(env)) { return; }\n").append("    cstack1.l = (*env)->NewString(env, ").append(stringObf ? Util.getStringObf(Util.utf82ints((locale.getLanguage().contains("zh") ? "应用已过期，停止运行！！！" : "The application has expired, stop running!!!"))) : "(unsigned short[]) {" + Util.utf82unicode((locale.getLanguage().contains("zh") ? "应用已过期，停止运行！！！" : "The application has expired, stop running!!!")) + "}").append(", ").append((locale.getLanguage().contains("zh") ? "应用已过期，停止运行！！！" : "The application has expired, stop running!!!").length()).append(");\n").append("    (*env)->CallVoidMethod(env, cstack0.l, cc_print(env)->method_0, cstack1.l);\n").append("    if ((*env)->ExceptionCheck(env)) { return; }\n").append("    exit(-1);\n").append("}\n").append("}\n\n").toString());
                     } else {
                         mainWriter.append(new StringBuilder().append("/* Native registration for <").append(className).append("> */\n").append("JNIEXPORT void JNICALL Java_").append(methodName).append("__00024myj2cLoader(JNIEnv *env, jclass clazz) {\n").append("    JNINativeMethod table[] = {\n").append(registrationMethods).append("    };\n").append("    (*env)->RegisterNatives(env, clazz, table, ").append(methodCount).append(");\n").append("}\n\n").toString());
                     }
